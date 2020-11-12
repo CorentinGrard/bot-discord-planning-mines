@@ -33,8 +33,7 @@ function getPlanning(channel) {
       for (const cour of Object.values(cours)) {
         if (cour.type === "VEVENT") {
           let startDate = new Date(
-            // new Date(cour.start).getTime() - 1000 * 60 * 5
-            new Date().getTime() + 1000 * 5
+            new Date(cour.start).getTime() - 1000 * 60 * 5
           );
           schedule.scheduleJob(
             startDate,
