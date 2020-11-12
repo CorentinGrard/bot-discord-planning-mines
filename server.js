@@ -9,6 +9,7 @@ const schedule = require("node-schedule");
 const client = new Discord.Client();
 global.Headers = fetch.Headers;
 let activated, job;
+const roleName = "Planning"
 
 function getPlanning(channel) {
   const date = new Date();
@@ -32,13 +33,15 @@ function getPlanning(channel) {
       for (const cour of Object.values(cours)) {
         if (cour.type === "VEVENT") {
           let startDate = new Date(
-            new Date(cour.start).getTime() - 1000 * 60 * 5
+            // new Date(cour.start).getTime() - 1000 * 60 * 5
+            new Date().getTime() + 1000 * 5
           );
           schedule.scheduleJob(
             startDate,
             function (description, channel) {
+              const role = channel.guild.roles.cache.find(role => role.name === roleName)
               channel.send(
-                `C'est l'heure de signer ! \n ${description} \n https://campus2.mines-ales.fr/course/view.php?id=1186`
+                `<@&${role.id}> C'est l'heure de signer ! \n ${description} \n https://campus2.mines-ales.fr/course/view.php?id=1186`
               );
             }.bind(null, cour.description, channel)
           );
@@ -49,6 +52,16 @@ function getPlanning(channel) {
 
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}!`);
+  client.guilds.cache.forEach(guild => {
+    if (!guild.roles.cache.some(role => role.name === roleName)) {
+      guild.roles.create({
+        data: {
+          name: 'Planning',
+          color: 'BLUE',
+        }
+      })
+    }
+  });
 });
 
 client.on("message", (msg) => {
@@ -67,6 +80,17 @@ client.on("message", (msg) => {
       activated = false;
       msg.reply("Planning bot deactivated");
       job.cancel();
+    }
+  } else if (msg.content === "!sub-planning") {
+    console.log(msg.channel)
+    const planningRole = msg.channel.guild.roles.cache.find(role => role.name === roleName);
+    const userId = msg.author.id
+    const member = msg.channel.guild.members.cache.get(userId)
+    const roles = member.roles
+    if (roles.cache.has(planningRole.id)) {
+      roles.remove(planningRole)
+    } else {
+      roles.add(planningRole)
     }
   }
 });
